@@ -28,7 +28,7 @@ public class Hashtag {
 
     private LocalDateTime lastUsed;
 
-    @ManyToMany(mappedBy = "tweet_hashags")
+    @ManyToMany(mappedBy = "hashtags")
     private Set<Tweet> tweets;
 
 }

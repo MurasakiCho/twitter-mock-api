@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -53,7 +52,6 @@ public class Tweet {
     @ManyToOne
     @JoinColumn(name = "in_reply_to_id")
     private Tweet inReplyTo;
-
 
     @ManyToOne
     @JoinColumn(name = "repost_of_id")
