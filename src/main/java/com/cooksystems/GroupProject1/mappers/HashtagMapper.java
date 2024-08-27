@@ -1,4 +1,4 @@
-package mappers;
+package com.cooksystems.GroupProject1.mappers;
 
 import org.mapstruct.Mapper;
 
