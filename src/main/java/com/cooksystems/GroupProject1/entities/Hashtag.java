@@ -1,14 +1,21 @@
 package com.cooksystems.GroupProject1.entities;
 
-import jakarta.persistence.*;
+import java.sql.Timestamp;
+import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 @NoArgsConstructor
@@ -27,6 +34,7 @@ public class Hashtag {
     @Column(updatable = false)
     private Timestamp firstUsed;
 
+    @UpdateTimestamp
     private Timestamp lastUsed;
 
     @ManyToMany
@@ -35,6 +43,6 @@ public class Hashtag {
             joinColumns = @JoinColumn(name = "hashtag_id"),
             inverseJoinColumns = @JoinColumn(name = "tweet_id")
     )
-    private Set<Tweet> tweets;
+    private List<Tweet> tweets;
 
 }

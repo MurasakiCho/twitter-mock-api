@@ -1,14 +1,22 @@
 package com.cooksystems.GroupProject1.entities;
 
-import jakarta.persistence.*;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Set;
+
+import org.hibernate.annotations.CreationTimestamp;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.cglib.core.Local;
-
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 @NoArgsConstructor
@@ -20,44 +28,45 @@ public class Tweet {
     private Long Id;
 
     @ManyToOne
-    @JoinColumn(name = "author_id")
     private User author;
 
     @CreationTimestamp
-    @Column(updatable = false)
     private Timestamp posted;
 
-    private boolean deleted;
+    private boolean deleted = false;
 
     private String content;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.MERGE)
     @JoinTable(
             name = "tweet_hashtags",
             joinColumns = @JoinColumn(name = "tweet_id"),
             inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
-    private Set<Hashtag> hashtags;
+    private List<Hashtag> hashtags;
 
     @ManyToMany(mappedBy = "likedTweets")
     private Set<User> likedByUsers;
 
-    @ManyToMany(mappedBy = "mentionedInTweets")
-    private Set<User> mentionedUsers;
+    @ManyToMany
+    @JoinTable(
+            name = "user_mentions",
+            joinColumns = @JoinColumn(name = "tweet_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> mentionedUsers;
 
     @OneToMany(mappedBy = "inReplyTo")
-    private Set<Tweet> replies;
+    private List<Tweet> replies;
 
     @OneToMany(mappedBy = "repostOf")
-    private Set<Tweet> reposts;
+    private List<Tweet> reposts;
 
     @ManyToOne
-    @JoinColumn(name = "in_reply_to_id")
     private Tweet inReplyTo;
 
 
     @ManyToOne
-    @JoinColumn(name = "repost_of_id")
     private Tweet repostOf;
 
 }

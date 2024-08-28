@@ -8,7 +8,7 @@ import com.cooksystems.GroupProject1.entities.Tweet;
 
 
 
-@Mapper(componentModel = "spring", uses = { HashtagMapper.class } )
+@Mapper(componentModel = "spring", uses = { UserMapper.class } )
 public interface TweetMapper {
 	
 	TweetResponseDto entityToDto(Tweet entity);
