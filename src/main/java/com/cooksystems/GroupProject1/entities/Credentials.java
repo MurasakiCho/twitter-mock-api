@@ -1,5 +1,6 @@
 package com.cooksystems.GroupProject1.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,9 @@ import lombok.NoArgsConstructor;
 @Data
 public class Credentials {
 
+	@Column(nullable = false, unique = true)
     private String username;
+
+    @Column(nullable = false)
     private String password;
 }

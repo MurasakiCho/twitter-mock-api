@@ -1,13 +1,22 @@
 package com.cooksystems.GroupProject1.entities;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.sql.Timestamp;
+import java.util.List;
+
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.Set;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
@@ -24,12 +33,14 @@ public class User {
 
     @Embedded
     private Profile profile;
+    
+    @OneToMany(mappedBy = "author")
+    private List<Tweet> tweets;
 
     @CreationTimestamp
-    @Column(updatable = false)
     private Timestamp joined;
 
-    private  boolean deleted;
+    private  boolean deleted = false;
 
     @ManyToMany
     @JoinTable(
@@ -37,25 +48,16 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "tweet_id")
     )
-    private Set<Tweet> likedTweets;
+    private List<Tweet> likedTweets;
+
+    @ManyToMany(mappedBy = "mentionedUsers")
+    private List<Tweet> mentionedTweets;
 
     @ManyToMany
-    @JoinTable(
-            name = "user_mentions",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "tweet_id")
-    )
-    private Set<Tweet> mentionedInTweets;
-
-    @ManyToMany
-    @JoinTable(
-            name = "followers_following",
-            joinColumns = @JoinColumn(name = "follower_id"),
-            inverseJoinColumns = @JoinColumn(name = "following_id")
-    )
-    private Set<User> followers;
+    @JoinTable(name = "followers_following")
+    private List<User> followers;
 
     @ManyToMany(mappedBy = "followers")
-    private Set<User> following;
+    private List<User> following;
 
 }
