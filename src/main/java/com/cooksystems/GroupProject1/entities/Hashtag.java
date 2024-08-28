@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -24,9 +25,9 @@ public class Hashtag {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime firstUsed;
+    private Timestamp firstUsed;
 
-    private LocalDateTime lastUsed;
+    private Timestamp lastUsed;
 
     @ManyToMany
     @JoinTable(

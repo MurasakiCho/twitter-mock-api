@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -26,7 +27,7 @@ public class User {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime joined;
+    private Timestamp joined;
 
     private  boolean deleted;
 

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.cglib.core.Local;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ public class Tweet {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime posted;
+    private Timestamp posted;
 
     private boolean deleted;
 
