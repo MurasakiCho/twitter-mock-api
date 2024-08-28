@@ -7,6 +7,6 @@ import com.cooksystems.GroupProject1.entities.Profile;
 
 @Mapper(componentModel = "spring" )
 public interface ProfileMapper {
-//
-//	ProfileDto entityToDto(Profile entity);
+
+	ProfileDto entityToDto(Profile entity);
 }

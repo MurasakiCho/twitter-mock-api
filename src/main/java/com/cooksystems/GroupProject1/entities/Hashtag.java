@@ -28,7 +28,12 @@ public class Hashtag {
 
     private LocalDateTime lastUsed;
 
-    @ManyToMany(mappedBy = "tweet_hashtags")
+    @ManyToMany
+    @JoinTable(
+            name = "tweet_hashtags",
+            joinColumns = @JoinColumn(name = "hashtag_id"),
+            inverseJoinColumns = @JoinColumn(name = "tweet_id")
+    )
     private Set<Tweet> tweets;
 
 }

@@ -10,7 +10,7 @@ import com.cooksystems.GroupProject1.entities.User;
 @Mapper(componentModel = "spring" , uses = { TweetMapper.class })
 public interface UserMapper {
 
-//	UserResponseDto entityToDto(User entity);
-//	
-//	User DtoToEntity(UserRequestDto request);
+	UserResponseDto entityToDto(User entity);
+	
+	User DtoToEntity(UserRequestDto request);
 }
