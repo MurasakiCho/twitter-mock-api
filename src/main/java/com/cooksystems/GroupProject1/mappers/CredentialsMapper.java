@@ -9,5 +9,5 @@ import com.cooksystems.GroupProject1.entities.Credentials;
 
 public interface CredentialsMapper {
 
-	CredentialsDto entityToDto(Credentials entity);
+//	CredentialsDto entityToDto(Credentials entity);
 }
