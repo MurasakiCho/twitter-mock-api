@@ -11,4 +11,9 @@ public class UserResponseDto {
     private String username;
     private ProfileDto profileDto;
     private Timestamp joined;
+
+    public UserResponseDto setProfileDto(ProfileDto profileDto){
+        this.profileDto = profileDto;
+        return this;
+    }
 }
