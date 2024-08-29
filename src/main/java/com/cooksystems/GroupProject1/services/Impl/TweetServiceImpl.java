@@ -31,9 +31,9 @@ public class TweetServiceImpl implements TweetService {
         }
         //checking if that tweet has been deleted
         if (tweet.isDeleted()) {
-            throw new NotFoundException("Tweet with id: " + id + " has been deleted.");
+            throw new NotFoundException("The Tweet with id: " + id + " has been deleted.");
         }
-        return tweetMapper.entityToDto(tweetRepository.saveAndFlush(tweet));
+        return tweetMapper.entityToDto(tweet);
     }
 
 }
