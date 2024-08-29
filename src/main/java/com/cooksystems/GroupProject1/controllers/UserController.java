@@ -1,10 +1,9 @@
 package com.cooksystems.GroupProject1.controllers;
+import com.cooksystems.GroupProject1.dtos.CredentialsDto;
+import com.cooksystems.GroupProject1.dtos.UserRequestDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 import com.cooksystems.GroupProject1.services.UserService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,15 +36,25 @@ public class UserController {
 //
 //	@GetMapping("/@{username}/following")
 //	
-//	@PostMapping
+	@PostMapping
+    public UserResponseDto createUser(@RequestBody UserRequestDto userRequestDto){
+        return userService.createUser(userRequestDto);
+    }
+
 //	
 //	@PostMapping("/@{username}/follow")
 //	
 //	@PostMapping("/@{username}/unfollow")
-//	
-//	@PatchMapping("/@{username}")
-//	
-//	@DeleteMapping("/@{username}")
+//
+    @PatchMapping("/@{username}")
+    public UserResponseDto updateUserProfile(@RequestBody UserRequestDto userRequestDto){
+        return userService.updateUserProfile(userRequestDto);
+    }
+
+	@DeleteMapping("/@{username}")
+    public UserResponseDto deleteUser(@PathVariable String username, @RequestBody CredentialsDto credentialsDto){
+        return userService.deleteUser(username, credentialsDto);
+    }
 	
 	
 	

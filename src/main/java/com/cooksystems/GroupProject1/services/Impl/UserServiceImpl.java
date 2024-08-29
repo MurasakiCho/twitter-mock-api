@@ -1,9 +1,14 @@
 package com.cooksystems.GroupProject1.services.Impl;
 
+import com.cooksystems.GroupProject1.dtos.CredentialsDto;
 import com.cooksystems.GroupProject1.dtos.ProfileDto;
+import com.cooksystems.GroupProject1.dtos.UserRequestDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
+import com.cooksystems.GroupProject1.entities.Profile;
 import com.cooksystems.GroupProject1.entities.Tweet;
 import com.cooksystems.GroupProject1.entities.User;
+import com.cooksystems.GroupProject1.exceptions.BadRequestException;
+import com.cooksystems.GroupProject1.exceptions.NotAuthorizedException;
 import com.cooksystems.GroupProject1.exceptions.NotFoundException;
 import com.cooksystems.GroupProject1.mappers.ProfileMapper;
 import com.cooksystems.GroupProject1.mappers.UserMapper;
@@ -32,10 +37,6 @@ public class UserServiceImpl implements UserService {
 
         for (User user : users){
             if(!user.isDeleted()){
-//                ProfileDto profileDto = profileMapper.entityToDto(user.getProfile());
-//                UserResponseDto userResponseDto = userMapper.entityToDto(user);
-//                userResponseDto.setProfileDto(profileDto);
-//                userResponseDtos.add(userResponseDto);
                 userResponseDtos.add(userMapper.entityToDto(user).setProfileDto(profileMapper.entityToDto(user.getProfile())));
             }
         }
@@ -58,9 +59,125 @@ public class UserServiceImpl implements UserService {
         return userMapper.entityToDto(user).setProfileDto(profileMapper.entityToDto(user.getProfile()));
     }
 
-//        ProfileDto profileDto = profileMapper.entityToDto(user.getProfile());
-//        UserResponseDto userResponseDto = userMapper.entityToDto(user);
-//        userResponseDto.setProfileDto(profileDto);
-//        return userResponseDto;
+    @Override
+    public UserResponseDto createUser(UserRequestDto userRequestDto) {
+        if (userRequestDto.getCredentials() == null && userRequestDto.getProfile() == null) {
+            throw new BadRequestException("Credentials and Profile are missing");
+        }
+        if (userRequestDto.getCredentials() == null) {
+            throw new BadRequestException("Credentials are missing");
+        }
+        if (userRequestDto.getProfile() == null) {
+            throw new BadRequestException("Profile is missing");
+        }
+        String username = userRequestDto.getCredentials().getUsername();
+        String password = userRequestDto.getCredentials().getPassword();
+        String email = userRequestDto.getProfile().getEmail();
+
+        if (username == null || username.trim().isEmpty()) {
+            throw new BadRequestException("Username is missing or empty");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new BadRequestException("Password is missing or empty");
+        }
+        if (email == null || email.trim().isEmpty()) {
+            throw new BadRequestException("Email is missing or empty");
+        }
+
+        Optional<User> optionalUser = userRepository.findByCredentialsUsername(username);
+        if(optionalUser.isPresent()){
+            if(optionalUser.get().isDeleted()){
+                optionalUser.get().setDeleted(false);
+                userRepository.saveAndFlush(optionalUser.get());
+                return userMapper.entityToDto(optionalUser.get());
+            }
+            throw new BadRequestException("Username already exists");
+        }
+        User user = userMapper.requestDtoToEntity(userRequestDto);
+        userRepository.saveAndFlush(user);
+        return userMapper.entityToDto(user);
+    }
+
+    @Override
+    public UserResponseDto updateUserProfile(UserRequestDto userRequestDto) {
+        if (userRequestDto.getCredentials() == null && userRequestDto.getProfile() == null) {
+            throw new BadRequestException("Credentials and Profile are missing");
+        }
+        if (userRequestDto.getCredentials() == null) {
+            throw new BadRequestException("Credentials are missing");
+        }
+        if (userRequestDto.getProfile() == null) {
+            throw new BadRequestException("Profile is missing");
+        }
+        String username = userRequestDto.getCredentials().getUsername();
+        String password = userRequestDto.getCredentials().getPassword();
+        String email = userRequestDto.getProfile().getEmail();
+
+        if (username == null || username.trim().isEmpty()) {
+            throw new BadRequestException("Username is missing or empty");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new BadRequestException("Password is missing or empty");
+        }
+        if (email == null || email.trim().isEmpty()) {
+            throw new BadRequestException("Email is missing or empty");
+        }
+        Optional<User> optionalUser = userRepository.findByCredentialsUsername(username);
+        if(!optionalUser.isPresent()){
+            throw new BadRequestException("Username does not exist");
+        }
+        User user = optionalUser.get();
+
+        if(user.isDeleted()){
+            throw new BadRequestException("Username has been deleted");
+        }
+        if(!username.equals(user.getCredentials().getUsername()) ||
+                !password.equals(user.getCredentials().getPassword())){
+            throw new NotAuthorizedException("Invalid Credentials, Username or Password is inccorect");
+        }
+        Profile profile = user.getProfile();
+        ProfileDto profileDto = userRequestDto.getProfile();
+
+        if (profileDto.getFirstName() != null) {
+            profile.setFirstName(profileDto.getFirstName());
+        }
+        if (profileDto.getLastName() != null) {
+            profile.setLastName(profileDto.getLastName());
+        }
+        if (profileDto.getEmail() != null) {
+            profile.setEmail(profileDto.getEmail());
+        }
+        if (profileDto.getPhone() != null) {
+            profile.setPhone(profileDto.getPhone());
+        }
+        return userMapper.entityToDto(userRepository.saveAndFlush(user));
+    }
+
+    @Override
+    public UserResponseDto deleteUser(String username, CredentialsDto credentialsDto) {
+        if (credentialsDto == null){
+            throw new BadRequestException("Credentials are missing");
+        }
+        String password = credentialsDto.getPassword();
+
+        if (username == null || username.trim().isEmpty()) {
+            throw new BadRequestException("Username is missing or empty");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new BadRequestException("Password is missing or empty");
+        }
+        Optional<User> optionalUser = userRepository.findByCredentialsUsername(username);
+        if(!optionalUser.isPresent()){
+            throw new BadRequestException("Username does not exist");
+        }
+        User user = optionalUser.get();
+
+        if(!username.equals(user.getCredentials().getUsername()) ||
+                !password.equals(user.getCredentials().getPassword())){
+            throw new NotAuthorizedException("Invalid Credentials, Username or Password is inccorect");
+        }
+        user.setDeleted(true);
+        return userMapper.entityToDto(userRepository.saveAndFlush(user));
+    }
 }
 

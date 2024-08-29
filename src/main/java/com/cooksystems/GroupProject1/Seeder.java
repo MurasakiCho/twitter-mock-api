@@ -250,7 +250,7 @@ public class Seeder implements CommandLineRunner {
 
         user3.setLikedTweets(user2Tweets);
         userRepository.saveAndFlush(user3);
-        
+
         deletedUser.setLikedTweets(user2Tweets);
         userRepository.saveAndFlush(deletedUser);
 

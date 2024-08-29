@@ -13,10 +13,14 @@ import com.cooksystems.GroupProject1.entities.User;
 public interface UserMapper {
 
 	@Mapping(target = "username", source = "credentials.username")
+    @Mapping(target = "profileDto", source = "profile")
     UserResponseDto entityToDto(User user);
 
     User responseDtoToEntity(UserResponseDto userResponseDto);
 
+    @Mapping(target = "credentials.username", source = "credentials.username")
+    @Mapping(target = "credentials.password", source = "credentials.password")
+    @Mapping(target = "profile.email", source = "profile.email")
     User requestDtoToEntity(UserRequestDto userRequestDto);
 
     List<UserResponseDto> entitiesToDtos(List<User> users);
