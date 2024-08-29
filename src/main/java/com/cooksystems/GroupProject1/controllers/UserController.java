@@ -1,4 +1,5 @@
 package com.cooksystems.GroupProject1.controllers;
+import com.cooksystems.GroupProject1.dtos.CredentialsDto;
 import com.cooksystems.GroupProject1.dtos.UserRequestDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 import com.cooksystems.GroupProject1.services.UserService;
@@ -51,8 +52,8 @@ public class UserController {
     }
 
 	@DeleteMapping("/@{username}")
-    public UserResponseDto deleteUser(@PathVariable String username, @RequestBody UserRequestDto userRequestDto){
-        return userService.deleteUser(username, userRequestDto);
+    public UserResponseDto deleteUser(@PathVariable String username, @RequestBody CredentialsDto credentialsDto){
+        return userService.deleteUser(username, credentialsDto);
     }
 	
 	
