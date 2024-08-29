@@ -2,6 +2,7 @@ package com.cooksystems.GroupProject1.controllers;
 
 
 import com.cooksystems.GroupProject1.dtos.HashtagDto;
+import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
 import com.cooksystems.GroupProject1.services.HashtagService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,9 +25,9 @@ public class TagController {
         return hashtagService.getAllTags();
     }
 
-    @GetMapping("/tags/{label}")
-    public HashtagDto getTags(@PathVariable Long id) {
-        return hashtagService.getTags(id);
+    @GetMapping("/{label}")
+    public List<TweetResponseDto> getTags(@PathVariable String label) {
+        return hashtagService.getTags(label);
     }
 
 }
