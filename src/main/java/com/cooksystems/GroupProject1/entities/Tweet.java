@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @Data
-public class Tweet {
+public class Tweet implements Comparable<Tweet>{
 
     @Id
     @GeneratedValue
@@ -68,5 +68,13 @@ public class Tweet {
 
     @ManyToOne
     private Tweet repostOf;
+
+
+	@Override
+	public int compareTo(Tweet o) {
+		return getPosted().compareTo(o.getPosted());
+	}
+    
+    
 
 }

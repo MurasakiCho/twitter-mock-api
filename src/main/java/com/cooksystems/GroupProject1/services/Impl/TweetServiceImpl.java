@@ -1,7 +1,9 @@
 package com.cooksystems.GroupProject1.services.Impl;
 
 import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
+import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 import com.cooksystems.GroupProject1.entities.Tweet;
+import com.cooksystems.GroupProject1.entities.User;
 import com.cooksystems.GroupProject1.exceptions.NotFoundException;
 import com.cooksystems.GroupProject1.mappers.TweetMapper;
 import com.cooksystems.GroupProject1.repositories.TweetRepository;
@@ -10,6 +12,9 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -35,5 +40,21 @@ public class TweetServiceImpl implements TweetService {
         }
         return tweetMapper.entityToDto(tweetRepository.saveAndFlush(tweet));
     }
+
+	@Override
+	public List<TweetResponseDto> getAllTweets() {
+		List<Tweet> tweets = tweetRepository.findAll();
+		//sort tweets in reverse-chronological order.
+		Collections.sort(tweets);
+		Collections.reverse(tweets);
+		
+	    List<TweetResponseDto> tweetResponseDtos = new ArrayList<>();
+	    for(Tweet tweet: tweets) {
+			if(!tweet.isDeleted()) {
+				tweetResponseDtos.add(tweetMapper.entityToDto(tweet));
+	        }
+		}
+		return tweetResponseDtos;
+	}
 
 }
