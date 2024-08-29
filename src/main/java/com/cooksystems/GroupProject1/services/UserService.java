@@ -1,5 +1,6 @@
 package com.cooksystems.GroupProject1.services;
 
+import com.cooksystems.GroupProject1.dtos.CredentialsDto;
 import com.cooksystems.GroupProject1.dtos.UserRequestDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 import java.util.List;
@@ -13,5 +14,5 @@ public interface UserService {
 
     UserResponseDto updateUserProfile(UserRequestDto userRequestDto);
 
-    UserResponseDto deleteUser(String username, UserRequestDto userRequestDto);
+    UserResponseDto deleteUser(String username, CredentialsDto credentialsDto);
 }

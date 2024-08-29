@@ -1,5 +1,6 @@
 package com.cooksystems.GroupProject1.services.Impl;
 
+import com.cooksystems.GroupProject1.dtos.CredentialsDto;
 import com.cooksystems.GroupProject1.dtos.ProfileDto;
 import com.cooksystems.GroupProject1.dtos.UserRequestDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
@@ -153,11 +154,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDto deleteUser(String username, UserRequestDto userRequestDto) {
-        if (userRequestDto.getCredentials() == null){
+    public UserResponseDto deleteUser(String username, CredentialsDto credentialsDto) {
+        if (credentialsDto == null){
             throw new BadRequestException("Credentials are missing");
         }
-        String password = userRequestDto.getCredentials().getPassword();
+        String password = credentialsDto.getPassword();
 
         if (username == null || username.trim().isEmpty()) {
             throw new BadRequestException("Username is missing or empty");
@@ -177,7 +178,6 @@ public class UserServiceImpl implements UserService {
         }
         user.setDeleted(true);
         return userMapper.entityToDto(userRepository.saveAndFlush(user));
-
     }
 }
 
