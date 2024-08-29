@@ -1,5 +1,6 @@
 package com.cooksystems.GroupProject1.services.Impl;
 
+import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
 import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 import com.cooksystems.GroupProject1.entities.Tweet;
@@ -55,6 +56,12 @@ public class TweetServiceImpl implements TweetService {
 	        }
 		}
 		return tweetResponseDtos;
+	}
+
+	@Override
+	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
