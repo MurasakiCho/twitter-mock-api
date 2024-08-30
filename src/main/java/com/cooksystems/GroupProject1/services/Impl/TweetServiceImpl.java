@@ -77,19 +77,58 @@ public class TweetServiceImpl implements TweetService {
 		tweet.setInReplyTo(null);
 		tweet.setLikedByUsers(null);
 		tweet.setDeleted(false);
-		int index = 0;
+		
 		List<User> mentions = null;
 		List<Hashtag> hashtags = null;
-		
-		while (content.contains("@") || content.contains("#")) {
-			if (content.contains("@")) {
-				if (mentions == null) {
-					mentions = new ArrayList<>();
+		tweetRepository.saveAndFlush(tweet);
+		if (content.contains("#")) {
+			if (hashtags == null) {
+				hashtags = new ArrayList<>();
+			}
+			String[] tagSplit = content.split("#");
+			for (int i = 1; i < tagSplit.length; i++) {
+				
+				Hashtag hashtag = null;
+				String label = "";
+				if (tagSplit[i].contains(" ")) {
+					label = "#" + tagSplit[i].split(" ")[0];
+				} else {
+					label = "#" + tagSplit[i];
 				}
-				index = content.indexOf('@', 0);
-				int end = content.indexOf(' ', index);
-				content.replaceFirst("@", " ");
-				String mention = content.substring(index + 1, end - 1);
+				
+				if (!hashtagRepository.existsByLabel(label)) {
+					hashtag = new Hashtag();
+					hashtag.setLabel(label);
+					List<Tweet> tweetArray = new ArrayList<>();
+					tweetArray.add(tweet);
+					hashtag.setTweets(tweetArray);
+					
+				} else {
+					hashtag = hashtagRepository.findByLabel(label);
+					List<Tweet> tweets = hashtag.getTweets();
+					tweets.add(tweet);
+					hashtag.setTweets(tweets);
+				}
+				hashtags.add(hashtag);
+				hashtagRepository.saveAndFlush(hashtag);
+				
+			}
+		}
+		
+		if (content.contains("@")) {
+			if (mentions == null) {
+				mentions = new ArrayList<>();
+			}
+			String[] mentionSplit = content.split("@");
+			
+			for (int i = 1; i < mentionSplit.length; i++) {
+				
+				String mention = "";
+				if (mentionSplit[i].contains(" ")) {
+					mention = mentionSplit[i].split(" ")[0];
+				} else {
+					mention = mentionSplit[i];
+				}
 				Optional<User> optionalUser = userRepository.findByCredentialsUsername(mention);
 
 		        User mentionedUser;
@@ -100,32 +139,7 @@ public class TweetServiceImpl implements TweetService {
 		        }
 		        
 		        mentions.add(mentionedUser);
-				
-			} else if (content.contains("#")) {
-				if (hashtags == null) {
-					hashtags = new ArrayList<>();
-				}
-				Hashtag hashtag = null;
-				index = content.indexOf('#', 0);
-				int end = content.indexOf(' ', index);
-				content.replaceFirst("#", " ");
-				
-				String label = content.substring(index + 1, end - 1);
-				if (!hashtagRepository.existsByLabel(label)) {
-					hashtag = new Hashtag();
-					hashtag.setLabel(label);
-					hashtag.setTweets(Arrays.asList(tweet));
-					
-				} else {
-					hashtag = hashtagRepository.findByLabel(label);
-					List<Tweet> tweets = hashtag.getTweets();
-					tweets.add(tweet);
-					hashtag.setTweets(tweets);
-				}
-				hashtags.add(hashtag);
-				hashtagRepository.saveAndFlush(hashtag);
 			}
-			
 		}
 		tweet.setHashtags(hashtags);
 		tweet.setMentionedUsers(mentions);
