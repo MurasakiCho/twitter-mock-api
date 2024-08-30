@@ -4,9 +4,12 @@ import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
 import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 import com.cooksystems.GroupProject1.entities.Tweet;
+import com.cooksystems.GroupProject1.entities.User;
 import com.cooksystems.GroupProject1.exceptions.NotFoundException;
 import com.cooksystems.GroupProject1.mappers.TweetMapper;
+import com.cooksystems.GroupProject1.mappers.UserMapper;
 import com.cooksystems.GroupProject1.repositories.TweetRepository;
+import com.cooksystems.GroupProject1.repositories.UserRepository;
 import com.cooksystems.GroupProject1.services.TweetService;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +26,14 @@ public class TweetServiceImpl implements TweetService {
 
     private final TweetRepository tweetRepository;
     private final TweetMapper tweetMapper;
+	private final UserRepository userRepository;
+	private final UserMapper userMapper;
 
     @Override
     public TweetResponseDto getTweetByID(Long id) {
         Optional<Tweet> optionalTweet = tweetRepository.findById(id);
         Tweet tweet;
+
         //checking if tweet exist in database
         if (optionalTweet.isPresent()) {
             tweet = optionalTweet.get();
@@ -38,6 +44,7 @@ public class TweetServiceImpl implements TweetService {
         if (tweet.isDeleted()) {
             throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
         }
+
         return tweetMapper.entityToDto(tweet);
     }
 
@@ -69,6 +76,7 @@ public class TweetServiceImpl implements TweetService {
 		//reposted tweet = the original tweet that was reposted
 		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
 		Tweet tweet;
+
 		//checking if tweet exist in database
 		if (optionalTweet.isPresent()) {
 			tweet = optionalTweet.get();
@@ -87,12 +95,47 @@ public class TweetServiceImpl implements TweetService {
 		if (tweet.getRepostOf().isDeleted()) {
 			throw new NotFoundException("The Tweet that was reposted has been deleted");
 		}
+
 		return tweetMapper.entityToDto(tweet);
 	}
 
 	@Override
 	public List<UserResponseDto> getMentionedUsersByTweetId(Long id) {
-		return null;
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+		Tweet tweet;
+		//checking if tweet exist in database
+		if (optionalTweet.isPresent()) {
+			tweet = optionalTweet.get();
+		} else {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+		//checking if that tweet has been deleted
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+		//checking if the tweet has any mentioned users
+		if (tweet.getMentionedUsers().isEmpty()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has no mentioned Users");
+		}
+
+		//removing any deleted users that is mentioned in the list
+		List<User> mentionedUsers = tweet.getMentionedUsers();
+		mentionedUsers.removeIf(User::isDeleted);
+
+		//list is empty after removing deleted users
+		if (mentionedUsers.isEmpty()) {
+			throw new NotFoundException("The Tweet with id:" + id + " mentions no active Users");
+		}
+
+		//parsing returned users to only their usernames
+		List<UserResponseDto> userResponseDtos = userMapper.entitiesToDtos(mentionedUsers);
+		for (UserResponseDto u: userResponseDtos) {
+			u.setProfileDto(null);
+			u.setJoined(null);
+		}
+		return userResponseDtos;
+
+//		return userMapper.entitiesToDtos(mentionedUsers);
 	}
 
 }
