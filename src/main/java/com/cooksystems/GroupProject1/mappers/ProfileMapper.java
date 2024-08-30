@@ -9,4 +9,6 @@ import com.cooksystems.GroupProject1.entities.Profile;
 public interface ProfileMapper {
 
 	ProfileDto entityToDto(Profile entity);
+
+	Profile dtoToEntity(ProfileDto profileDto);
 }

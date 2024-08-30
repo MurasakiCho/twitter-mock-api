@@ -93,6 +93,9 @@ public class UserServiceImpl implements UserService {
             }
             throw new BadRequestException("Username already exists");
         }
+        if (userRequestDto.getProfile() == null) {
+            userRequestDto.setProfile(new ProfileDto());
+        }
         User user = userMapper.requestDtoToEntity(userRequestDto);
         userRepository.saveAndFlush(user);
         return userMapper.entityToDto(user);
@@ -111,7 +114,7 @@ public class UserServiceImpl implements UserService {
         }
         String username = userRequestDto.getCredentials().getUsername();
         String password = userRequestDto.getCredentials().getPassword();
-        String email = userRequestDto.getProfile().getEmail();
+        //String email = userRequestDto.getProfile().getEmail();
 
         if (username == null || username.trim().isEmpty()) {
             throw new BadRequestException("Username is missing or empty");
@@ -119,9 +122,9 @@ public class UserServiceImpl implements UserService {
         if (password == null || password.trim().isEmpty()) {
             throw new BadRequestException("Password is missing or empty");
         }
-        if (email == null || email.trim().isEmpty()) {
-            throw new BadRequestException("Email is missing or empty");
-        }
+//        if (email == null || email.trim().isEmpty()) {
+//            throw new BadRequestException("Email is missing or empty");
+//        }
         Optional<User> optionalUser = userRepository.findByCredentialsUsername(username);
         if(!optionalUser.isPresent()){
             throw new BadRequestException("Username does not exist");
