@@ -1,5 +1,6 @@
 package com.cooksystems.GroupProject1.controllers;
 import com.cooksystems.GroupProject1.dtos.CredentialsDto;
+import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
 import com.cooksystems.GroupProject1.dtos.UserRequestDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 import com.cooksystems.GroupProject1.services.UserService;
@@ -28,14 +29,26 @@ public class UserController {
 //
 //	@GetMapping("/@{username}/feed")
 //	
-//	@GetMapping("/@{username}/tweets")
-//	
-//	@GetMapping("/@{username}/mentions")
-//	
-//	@GetMapping("/@{username}/followers")
-//
-//	@GetMapping("/@{username}/following")
-//	
+	@GetMapping("/@{username}/tweets")
+	public List<TweetResponseDto> getUserTweets(@PathVariable String username){
+        return userService.getUserTweets(username);
+    }
+	
+	@GetMapping("/@{username}/mentions")
+	public List<TweetResponseDto> getUserMentions(@PathVariable String username){
+        return userService.getUserMentions(username);
+    }
+	
+	@GetMapping("/@{username}/followers")
+	public List<UserResponseDto> getUserFollowers(@PathVariable String username){
+        return userService.getUserFollowers(username);
+    }
+	
+	@GetMapping("/@{username}/following")
+	public List<UserResponseDto> getUserFollowing(@PathVariable String username){
+        return userService.getUserFollowing(username);
+    }
+	
 	@PostMapping
     public UserResponseDto createUser(@RequestBody UserRequestDto userRequestDto){
         return userService.createUser(userRequestDto);

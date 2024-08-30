@@ -2,6 +2,7 @@ package com.cooksystems.GroupProject1.services.Impl;
 
 import com.cooksystems.GroupProject1.dtos.CredentialsDto;
 import com.cooksystems.GroupProject1.dtos.ProfileDto;
+import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
 import com.cooksystems.GroupProject1.dtos.UserRequestDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 import com.cooksystems.GroupProject1.entities.Profile;
@@ -11,7 +12,9 @@ import com.cooksystems.GroupProject1.exceptions.BadRequestException;
 import com.cooksystems.GroupProject1.exceptions.NotAuthorizedException;
 import com.cooksystems.GroupProject1.exceptions.NotFoundException;
 import com.cooksystems.GroupProject1.mappers.ProfileMapper;
+import com.cooksystems.GroupProject1.mappers.TweetMapper;
 import com.cooksystems.GroupProject1.mappers.UserMapper;
+import com.cooksystems.GroupProject1.repositories.TweetRepository;
 import com.cooksystems.GroupProject1.repositories.UserRepository;
 import com.cooksystems.GroupProject1.services.UserService;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,9 +31,27 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final TweetRepository tweetRepository;
     private final UserMapper userMapper;
+    private final TweetMapper tweetMapper;
     private final ProfileMapper profileMapper;
 
+    @Override
+    public User findUser(String username) {
+		Optional<User> optionalUser = userRepository.findByCredentialsUsername(username);
+
+        User user;
+        if (optionalUser.isPresent()) {
+            user = optionalUser.get();
+        } else {
+            throw new NotFoundException(("No user found with username: " + username));
+        }
+        if (user.isDeleted()) {
+            throw new NotFoundException("User with username: " + username + " has been deleted");
+        }
+        return user;
+	}
+    
     @Override
     public List<UserResponseDto> getAllUsers() {
         List<User> users = userRepository.findAll();
@@ -45,17 +67,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto getUserByUsername(String username) {
-        Optional<User> optionalUser = userRepository.findByCredentialsUsername(username);
-
-        User user;
-        if (optionalUser.isPresent()) {
-            user = optionalUser.get();
-        } else {
-            throw new NotFoundException(("No user found with username: " + username));
-        }
-        if (user.isDeleted()) {
-            throw new NotFoundException("User with username: " + username + " has been deleted");
-        }
+    	User user = findUser(username);
+    	
         return userMapper.entityToDto(user).setProfileDto(profileMapper.entityToDto(user.getProfile()));
     }
 
@@ -182,5 +195,67 @@ public class UserServiceImpl implements UserService {
         user.setDeleted(true);
         return userMapper.entityToDto(userRepository.saveAndFlush(user));
     }
+
+	@Override
+	public List<UserResponseDto> getUserFollowing(String username) {
+		User user = findUser(username);
+		
+        List<User> following = user.getFollowing();
+        List<UserResponseDto> followingDtos = new ArrayList<>();
+        for(User u : following) {
+        	if (!u.isDeleted()) {
+        		followingDtos.add(userMapper.entityToDto(u).setProfileDto(profileMapper.entityToDto(u.getProfile())));
+        	}
+        }
+        
+		return followingDtos;
+	}
+
+	@Override
+	public List<UserResponseDto> getUserFollowers(String username) {
+
+        User user = findUser(username);
+        List<User> followers = user.getFollowers();
+        List<UserResponseDto> followerDtos = new ArrayList<>();
+        for(User u : followers) {
+        	if (!u.isDeleted()) {
+        		followerDtos.add(userMapper.entityToDto(u).setProfileDto(profileMapper.entityToDto(u.getProfile())));
+        	}
+        }
+        
+		return followerDtos;
+	}
+
+	@Override
+	public List<TweetResponseDto> getUserTweets(String username) {
+		User user = findUser(username);
+		List<Tweet> tweets = user.getTweets();
+		Collections.sort(tweets);
+		Collections.reverse(tweets);
+		List<TweetResponseDto> userTweetDtos = new ArrayList<>();
+		for(Tweet t : tweets) {
+        	if (!t.isDeleted()) {
+        		userTweetDtos.add(tweetMapper.entityToDto(t));
+        	}
+        }
+		return userTweetDtos;
+	}
+
+	@Override
+	public List<TweetResponseDto> getUserMentions(String username) {
+		List<Tweet> tweets = tweetRepository.findAll();
+		List<TweetResponseDto> mentionedTweetDtos = new ArrayList<>();
+		Collections.sort(tweets);
+		Collections.reverse(tweets);
+		for (Tweet t: tweets) {
+			List<User> users = t.getMentionedUsers();
+			for (User user: users) {
+				if (user.getCredentials().getUsername().equals(username) && (!t.isDeleted())) {
+					mentionedTweetDtos.add(tweetMapper.entityToDto(t));
+				}
+			}
+		}
+		return mentionedTweetDtos;
+	}
 }
 

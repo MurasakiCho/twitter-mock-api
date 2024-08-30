@@ -3,11 +3,13 @@ package com.cooksystems.GroupProject1.services.Impl;
 import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
 import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
+import com.cooksystems.GroupProject1.entities.Hashtag;
 import com.cooksystems.GroupProject1.entities.Tweet;
 import com.cooksystems.GroupProject1.entities.User;
 import com.cooksystems.GroupProject1.exceptions.NotFoundException;
 import com.cooksystems.GroupProject1.mappers.TweetMapper;
 import com.cooksystems.GroupProject1.mappers.UserMapper;
+import com.cooksystems.GroupProject1.repositories.HashtagRepository;
 import com.cooksystems.GroupProject1.repositories.TweetRepository;
 import com.cooksystems.GroupProject1.repositories.UserRepository;
 import com.cooksystems.GroupProject1.services.TweetService;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -25,8 +28,9 @@ import java.util.Optional;
 public class TweetServiceImpl implements TweetService {
 
     private final TweetRepository tweetRepository;
-    private final TweetMapper tweetMapper;
+	private final HashtagRepository hashtagRepository;
 	private final UserRepository userRepository;
+    private final TweetMapper tweetMapper;
 	private final UserMapper userMapper;
 
     @Override
@@ -65,9 +69,67 @@ public class TweetServiceImpl implements TweetService {
 	}
 
 	@Override
-	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto) {
-		// TODO Auto-generated method stub
-		return null;
+	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto, User user) {
+		Tweet tweet = tweetMapper.DtoToEntity(tweetRequestDto);
+		String content = tweetRequestDto.getContent();
+		tweet.setAuthor(user);
+		tweet.setContent(content);
+		tweet.setInReplyTo(null);
+		tweet.setLikedByUsers(null);
+		tweet.setDeleted(false);
+		int index = 0;
+		List<User> mentions = null;
+		List<Hashtag> hashtags = null;
+		
+		while (content.contains("@") || content.contains("#")) {
+			if (content.contains("@")) {
+				if (mentions == null) {
+					mentions = new ArrayList<>();
+				}
+				index = content.indexOf('@', 0);
+				int end = content.indexOf(' ', index);
+				content.replaceFirst("@", " ");
+				String mention = content.substring(index + 1, end - 1);
+				Optional<User> optionalUser = userRepository.findByCredentialsUsername(mention);
+
+		        User mentionedUser;
+		        if (optionalUser.isPresent()) {
+		            mentionedUser = optionalUser.get();
+		        } else {
+		            throw new NotFoundException(("No user found with username: " + mention));
+		        }
+		        
+		        mentions.add(mentionedUser);
+				
+			} else if (content.contains("#")) {
+				if (hashtags == null) {
+					hashtags = new ArrayList<>();
+				}
+				Hashtag hashtag = null;
+				index = content.indexOf('#', 0);
+				int end = content.indexOf(' ', index);
+				content.replaceFirst("#", " ");
+				
+				String label = content.substring(index + 1, end - 1);
+				if (!hashtagRepository.existsByLabel(label)) {
+					hashtag = new Hashtag();
+					hashtag.setLabel(label);
+					hashtag.setTweets(Arrays.asList(tweet));
+					
+				} else {
+					hashtag = hashtagRepository.findByLabel(label);
+					List<Tweet> tweets = hashtag.getTweets();
+					tweets.add(tweet);
+					hashtag.setTweets(tweets);
+				}
+				hashtags.add(hashtag);
+				hashtagRepository.saveAndFlush(hashtag);
+			}
+			
+		}
+		tweet.setHashtags(hashtags);
+		tweet.setMentionedUsers(mentions);
+		return tweetMapper.entityToDto(tweetRepository.saveAndFlush(tweet));
 	}
 
 	@Override

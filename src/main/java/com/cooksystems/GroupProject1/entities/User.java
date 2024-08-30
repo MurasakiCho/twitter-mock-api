@@ -49,7 +49,8 @@ public class User {
     @JoinTable(name = "followers_following")
     private List<User> followers;
 
-    @ManyToMany(mappedBy = "followers")
+    @ManyToMany
+    @JoinTable(name = "followers")
     private List<User> following;
 
 }
