@@ -56,8 +56,7 @@ public class TweetController {
 
 	@PostMapping
 	public TweetResponseDto createTweet(@RequestBody TweetRequestDto tweetRequestDto) {
-		User user = userService.findUser(tweetRequestDto.getCredentialsDto().getUsername());
-		return tweetService.createTweet(tweetRequestDto, user);
+		return tweetService.createTweet(tweetRequestDto, userService.findUser(tweetRequestDto.getCredentials().getUsername()));
 	}
 //	@PostMapping("/{id}/like")
 //	

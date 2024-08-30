@@ -9,5 +9,5 @@ import java.sql.Timestamp;
 @Data
 public class TweetRequestDto {
     private String content;
-    private CredentialsDto credentialsDto;
+    private CredentialsDto credentials;
 }
