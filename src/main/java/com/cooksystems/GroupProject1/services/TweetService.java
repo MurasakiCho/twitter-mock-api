@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
 import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
+import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 
 public interface TweetService {
 
@@ -13,4 +14,7 @@ public interface TweetService {
 
 	TweetResponseDto createTweet(TweetRequestDto tweetRequestDto);
 
+	TweetResponseDto getRepostById(Long id);
+
+	List<UserResponseDto> getMentionedUsersByTweetId(Long id);
 }

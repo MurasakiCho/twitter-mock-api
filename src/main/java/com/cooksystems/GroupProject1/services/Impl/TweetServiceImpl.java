@@ -4,7 +4,6 @@ import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
 import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 import com.cooksystems.GroupProject1.entities.Tweet;
-import com.cooksystems.GroupProject1.entities.User;
 import com.cooksystems.GroupProject1.exceptions.NotFoundException;
 import com.cooksystems.GroupProject1.mappers.TweetMapper;
 import com.cooksystems.GroupProject1.repositories.TweetRepository;
@@ -33,11 +32,11 @@ public class TweetServiceImpl implements TweetService {
         if (optionalTweet.isPresent()) {
             tweet = optionalTweet.get();
         } else {
-            throw new NotFoundException("No Tweet found with id: " + id);
+            throw new NotFoundException("No Tweet found with id:" + id);
         }
         //checking if that tweet has been deleted
         if (tweet.isDeleted()) {
-            throw new NotFoundException("The Tweet with id: " + id + " has been deleted.");
+            throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
         }
         return tweetMapper.entityToDto(tweet);
     }
@@ -61,6 +60,38 @@ public class TweetServiceImpl implements TweetService {
 	@Override
 	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto) {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public TweetResponseDto getRepostById(Long id) {
+		//repost tweet = a tweet that reposted another tweet
+		//reposted tweet = the original tweet that was reposted
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+		Tweet tweet;
+		//checking if tweet exist in database
+		if (optionalTweet.isPresent()) {
+			tweet = optionalTweet.get();
+		} else {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+		//checking if the repost tweet has been deleted
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+		//checking if the tweet is a repost tweet
+		if (tweet.getRepostOf() == null) {
+			throw new NotFoundException("The Tweet with id:" + id + " has no reposted Tweet");
+		}
+		//checking if the reposted tweet has been deleted
+		if (tweet.getRepostOf().isDeleted()) {
+			throw new NotFoundException("The Tweet that was reposted has been deleted");
+		}
+		return tweetMapper.entityToDto(tweet);
+	}
+
+	@Override
+	public List<UserResponseDto> getMentionedUsersByTweetId(Long id) {
 		return null;
 	}
 

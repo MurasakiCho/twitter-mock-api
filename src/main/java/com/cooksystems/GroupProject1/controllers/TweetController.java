@@ -2,6 +2,7 @@ package com.cooksystems.GroupProject1.controllers;
 
 import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
 import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
+import com.cooksystems.GroupProject1.dtos.UserResponseDto;
 import com.cooksystems.GroupProject1.services.TweetService;
 
 import java.util.List;
@@ -39,11 +40,17 @@ public class TweetController {
 //	@GetMapping("/{id}/context")
 //	
 //	@GetMapping("/{id}/reply")
-//	
-//	@GetMapping("/{id}/repost")
-//	
-//	@GetMapping("/{id}/mentions")
-//	
+
+	@GetMapping("/{id}/reposts")
+	public TweetResponseDto getRepostById(@PathVariable Long id) {
+		return tweetService.getRepostById(id);
+	}
+
+	@GetMapping("/{id}/mentions")
+	public List<UserResponseDto> getMentionedUsersByTweetId(@PathVariable Long id) {
+		return tweetService.getMentionedUsersByTweetId(id);
+	}
+
 	@PostMapping
 	public TweetResponseDto createTweet(@RequestBody TweetRequestDto tweetRequestDto) {
 		return tweetService.createTweet(tweetRequestDto);
