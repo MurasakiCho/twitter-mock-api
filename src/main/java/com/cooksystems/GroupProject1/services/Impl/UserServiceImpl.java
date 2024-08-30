@@ -257,5 +257,111 @@ public class UserServiceImpl implements UserService {
 		}
 		return mentionedTweetDtos;
 	}
+
+    @Override
+    public List<TweetResponseDto> getUserFeeds(String username){
+        if(username == null || username.trim().isEmpty()){
+            throw new BadRequestException("Username is missing or empty");
+        }
+
+        Optional<User> optionalUser = userRepository.findByCredentialsUsername(username);
+
+        if(optionalUser.isEmpty()){
+            throw new BadRequestException("Username does not exist");
+        }
+
+        User user = optionalUser.get();
+
+        if(user.isDeleted()){
+            throw new BadRequestException("Username has been deleted");
+        }
+
+        List<Tweet> tweets = new ArrayList<>();
+        tweets.addAll(user.getTweets());
+
+        for(User following : user.getFollowing()){
+            tweets.addAll(following.getTweets());
+        }
+
+        tweets.sort(Tweet::compareTo);
+
+        List<TweetResponseDto> tweetResponseDtos = new ArrayList<>();
+
+        for(Tweet tweet : tweets){
+            tweetResponseDtos.add(tweetMapper.entityToDto(tweet));
+        }
+
+        return tweetResponseDtos;
+    }
+
+    @Override
+    public void followUser (String username, CredentialsDto credentialsDto) {
+        //credential checks
+        if (credentialsDto == null){
+            throw new BadRequestException("Credentials are missing");
+        }
+
+        if (credentialsDto.getUsername() == null || credentialsDto.getUsername().trim().isEmpty()){
+            throw new BadRequestException("Username is missing or empty");
+        }
+
+        if (credentialsDto.getPassword() == null || credentialsDto.getPassword().trim().isEmpty()){
+            throw new BadRequestException("Password is missing or empty");
+        }
+
+        //User checks
+        Optional<User> optionalUser1 = userRepository.findByCredentialsUsername(username);
+        Optional<User> optionalUser2 = userRepository.findByCredentialsUsername(credentialsDto.getUsername());
+        if(optionalUser1.isEmpty() || optionalUser2.isEmpty()){
+            throw new BadRequestException("Username does not exist");
+        }
+        if(optionalUser1.get().isDeleted() || optionalUser2.get().isDeleted()){
+            throw new BadRequestException("Username has been deleted");
+        }
+
+        User followedUser = optionalUser1.get();
+        User followUser = optionalUser2.get();
+
+        if(followedUser.getFollowers().contains(followUser)){
+            throw new BadRequestException("Username is already a follower");
+        }
+
+        followedUser.getFollowers().add(followUser);
+    }
+
+    @Override
+    public void unfollowUser (String username, CredentialsDto credentialsDto) {
+        //credential checks
+        if (credentialsDto == null){
+            throw new BadRequestException("Credentials are missing");
+        }
+
+        if (credentialsDto.getUsername() == null || credentialsDto.getUsername().trim().isEmpty()){
+            throw new BadRequestException("Username is missing or empty");
+        }
+
+        if (credentialsDto.getPassword() == null || credentialsDto.getPassword().trim().isEmpty()){
+            throw new BadRequestException("Password is missing or empty");
+        }
+
+        //User checks
+        Optional<User> optionalUser1 = userRepository.findByCredentialsUsername(username);
+        Optional<User> optionalUser2 = userRepository.findByCredentialsUsername(credentialsDto.getUsername());
+        if(optionalUser1.isEmpty() || optionalUser2.isEmpty()){
+            throw new BadRequestException("Username does not exist");
+        }
+        if(optionalUser1.get().isDeleted() || optionalUser2.get().isDeleted()){
+            throw new BadRequestException("Username has been deleted");
+        }
+
+        User followedUser = optionalUser1.get();
+        User followUser = optionalUser2.get();
+
+        if(!followedUser.getFollowers().contains(followUser)){
+            throw new BadRequestException("Username is not a follower");
+        }
+
+        followedUser.getFollowers().remove(followUser);
+    }
 }
 
