@@ -1,12 +1,12 @@
 package com.cooksystems.GroupProject1.services.Impl;
 
-import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
-import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
-import com.cooksystems.GroupProject1.dtos.UserResponseDto;
+import com.cooksystems.GroupProject1.dtos.*;
 import com.cooksystems.GroupProject1.entities.Hashtag;
 import com.cooksystems.GroupProject1.entities.Tweet;
 import com.cooksystems.GroupProject1.entities.User;
+import com.cooksystems.GroupProject1.exceptions.BadRequestException;
 import com.cooksystems.GroupProject1.exceptions.NotFoundException;
+import com.cooksystems.GroupProject1.mappers.HashtagMapper;
 import com.cooksystems.GroupProject1.mappers.TweetMapper;
 import com.cooksystems.GroupProject1.mappers.UserMapper;
 import com.cooksystems.GroupProject1.repositories.HashtagRepository;
@@ -32,6 +32,7 @@ public class TweetServiceImpl implements TweetService {
 	private final UserRepository userRepository;
     private final TweetMapper tweetMapper;
 	private final UserMapper userMapper;
+	private final HashtagMapper hashtagMapper;
 
     @Override
     public TweetResponseDto getTweetByID(Long id) {
@@ -198,6 +199,61 @@ public class TweetServiceImpl implements TweetService {
 		return userResponseDtos;
 
 //		return userMapper.entitiesToDtos(mentionedUsers);
+	}
+
+	@Override
+	public TweetResponseDto deleteTweet(Long id, CredentialsDto credentialsDto) {
+		if(credentialsDto == null){
+			throw new BadRequestException("No credentials provided");
+		}
+		if(credentialsDto.getUsername() == null || credentialsDto.getUsername().isEmpty()){
+			throw new BadRequestException("No username provided");
+		}
+		if(credentialsDto.getPassword() == null || credentialsDto.getPassword().isEmpty()){
+			throw new BadRequestException("No password provided");
+		}
+
+		Optional<User> optionalUser = userRepository.findByCredentialsUsername(credentialsDto.getUsername());
+
+		if (optionalUser.isEmpty()) {
+			throw new NotFoundException("No user found with username:" + credentialsDto.getUsername());
+		}
+
+		User user = optionalUser.get();
+
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+
+		if (optionalTweet.isEmpty()) {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+
+		Tweet tweet = optionalTweet.get();
+
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+
+		if(tweet.getAuthor() != user){
+			throw new NotFoundException("Tweet does not belong to user");
+		}
+
+		tweet.setDeleted(true);
+		tweetRepository.saveAndFlush(tweet);
+		return tweetMapper.entityToDto(tweet);
+	}
+
+	@Override
+	public List<HashtagDto> getTweetHashtags(Long id) {
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+		if (optionalTweet.isEmpty()) {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+		Tweet tweet = optionalTweet.get();
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+
+		return hashtagMapper.entitiesToDtos(tweet.getHashtags());
 	}
 
 }

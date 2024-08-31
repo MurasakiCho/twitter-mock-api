@@ -309,9 +309,10 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Password is missing or empty");
         }
 
-        //User checks
         Optional<User> optionalUser1 = userRepository.findByCredentialsUsername(username);
         Optional<User> optionalUser2 = userRepository.findByCredentialsUsername(credentialsDto.getUsername());
+
+        //User checks
         if(optionalUser1.isEmpty() || optionalUser2.isEmpty()){
             throw new BadRequestException("Username does not exist");
         }
@@ -320,13 +321,17 @@ public class UserServiceImpl implements UserService {
         }
 
         User followedUser = optionalUser1.get();
-        User followUser = optionalUser2.get();
+        User follower = optionalUser2.get();
 
-        if(followedUser.getFollowers().contains(followUser)){
-            throw new BadRequestException("Username is already a follower");
+        if(follower.getFollowing().contains(followedUser)){
+            throw new BadRequestException("Username is already being followed");
         }
 
-        followedUser.getFollowers().add(followUser);
+        followedUser.getFollowers().add(follower);
+        follower.getFollowing().add(followedUser);
+
+        userRepository.saveAndFlush(followedUser);
+        userRepository.saveAndFlush(follower);
     }
 
     @Override
@@ -344,9 +349,10 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Password is missing or empty");
         }
 
-        //User checks
         Optional<User> optionalUser1 = userRepository.findByCredentialsUsername(username);
         Optional<User> optionalUser2 = userRepository.findByCredentialsUsername(credentialsDto.getUsername());
+
+        //User checks
         if(optionalUser1.isEmpty() || optionalUser2.isEmpty()){
             throw new BadRequestException("Username does not exist");
         }
@@ -355,13 +361,17 @@ public class UserServiceImpl implements UserService {
         }
 
         User followedUser = optionalUser1.get();
-        User followUser = optionalUser2.get();
+        User follower = optionalUser2.get();
 
-        if(!followedUser.getFollowers().contains(followUser)){
+        if(!follower.getFollowing().contains(followedUser)){
             throw new BadRequestException("Username is not a follower");
         }
 
-        followedUser.getFollowers().remove(followUser);
+        followedUser.getFollowers().remove(follower);
+        follower.getFollowing().remove(followedUser);
+
+        userRepository.saveAndFlush(followedUser);
+        userRepository.saveAndFlush(follower);
     }
 }
 
