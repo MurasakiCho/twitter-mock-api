@@ -93,6 +93,14 @@ public class TweetServiceImpl implements TweetService {
 
 	@Override
 	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto) {
+		if (tweetRequestDto == null) {
+			throw new NotFoundException("Request body must not be empty.");
+		} else if (tweetRequestDto.getCredentials() == null) {
+			throw new NotFoundException("Request included no credentials");
+		} else if (tweetRequestDto.getCredentials().getPassword() == null) {
+			throw new NotFoundException("Requested credentials did not contain a password");
+			
+		}
 		User user = findUser(tweetRequestDto.getCredentials().getUsername());
 		Tweet tweet = tweetMapper.DtoToEntity(tweetRequestDto);
 		String content = tweetRequestDto.getContent();
