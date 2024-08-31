@@ -2,10 +2,7 @@ package com.cooksystems.GroupProject1.services;
 
 import java.util.List;
 
-import com.cooksystems.GroupProject1.dtos.CredentialsDto;
-import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
-import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
-import com.cooksystems.GroupProject1.dtos.UserResponseDto;
+import com.cooksystems.GroupProject1.dtos.*;
 
 public interface TweetService {
 
@@ -18,6 +15,16 @@ public interface TweetService {
 	TweetResponseDto getRepostById(Long id);
 
 	List<UserResponseDto> getMentionedUsersByTweetId(Long id);
+
+	TweetResponseDto deleteTweet(Long id, CredentialsDto credentialsDto);
+
+	List<HashtagDto> getTweetHashtags (Long id);
+
+	List<UserResponseDto> getTweetLikes(Long id);
+
+	ContextDto getTweetContext(Long id);
+
+	List<TweetResponseDto> getTweetReplies(Long id);
 
 	void likeTweet(long id, CredentialsDto credRequestDto);
 

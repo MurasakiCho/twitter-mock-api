@@ -26,9 +26,11 @@ public class UserController {
     public UserResponseDto getUser(@PathVariable String username){
         return userService.getUserByUsername(username);
     }
-//
-//	@GetMapping("/@{username}/feed")
-//	
+	@GetMapping("/@{username}/feed")
+    public List<TweetResponseDto> getUserFeeds(@PathVariable String username){
+        return userService.getUserFeeds(username);
+    }
+
 	@GetMapping("/@{username}/tweets")
 	public List<TweetResponseDto> getUserTweets(@PathVariable String username){
         return userService.getUserTweets(username);
@@ -54,11 +56,12 @@ public class UserController {
         return userService.createUser(userRequestDto);
     }
 
-//	
-//	@PostMapping("/@{username}/follow")
-//	
-//	@PostMapping("/@{username}/unfollow")
-//
+    @PostMapping("/@{username}/follow")
+    public void followUser(@PathVariable String username, @RequestBody CredentialsDto credentialsDto){ userService.followUser(username, credentialsDto);}
+
+    @PostMapping("/@{username}/unfollow")
+    public void unfollowUser(@PathVariable String username, @RequestBody CredentialsDto credentialsDto){ userService.unfollowUser(username, credentialsDto);}
+
     @PatchMapping("/@{username}")
     public UserResponseDto updateUserProfile(@RequestBody UserRequestDto userRequestDto){
         return userService.updateUserProfile(userRequestDto);
