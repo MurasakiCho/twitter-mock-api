@@ -27,7 +27,6 @@ public interface UserService {
 
 	List<TweetResponseDto> getUserMentions(String username);
 
-	User findUser(String username);
 	
 	
 }

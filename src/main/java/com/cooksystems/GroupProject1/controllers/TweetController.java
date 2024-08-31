@@ -1,5 +1,6 @@
 package com.cooksystems.GroupProject1.controllers;
 
+import com.cooksystems.GroupProject1.dtos.CredentialsDto;
 import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
 import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
@@ -56,10 +57,12 @@ public class TweetController {
 
 	@PostMapping
 	public TweetResponseDto createTweet(@RequestBody TweetRequestDto tweetRequestDto) {
-		return tweetService.createTweet(tweetRequestDto, userService.findUser(tweetRequestDto.getCredentials().getUsername()));
+		return tweetService.createTweet(tweetRequestDto);
 	}
-//	@PostMapping("/{id}/like")
-//	
+	@PostMapping("/{id}/like")
+	public void likeTweet(@PathVariable long id, @RequestBody CredentialsDto credRequestDto) {
+		tweetService.likeTweet(id, credRequestDto);
+	}
 //	@PostMapping("/{id}/reply")
 //	
 //	@PostMapping("/{id}/repost")
