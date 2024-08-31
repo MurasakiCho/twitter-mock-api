@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -33,23 +34,44 @@ public class TweetServiceImpl implements TweetService {
     private final TweetMapper tweetMapper;
 	private final UserMapper userMapper;
 	private final HashtagMapper hashtagMapper;
+	
+	
+    public User findUser(String username) {
+		Optional<User> optionalUser = userRepository.findByCredentialsUsername(username);
+
+        User user;
+        if (optionalUser.isPresent()) {
+            user = optionalUser.get();
+        } else {
+            throw new NotFoundException(("No user found with username: " + username));
+        }
+        if (user.isDeleted()) {
+            throw new NotFoundException("User with username: " + username + " has been deleted");
+        }
+        return user;
+	}
+    
+    public Tweet findTweet(Long id) {
+    	 Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+         Tweet tweet;
+
+         //checking if tweet exist in database
+         if (optionalTweet.isPresent()) {
+             tweet = optionalTweet.get();
+         } else {
+             throw new NotFoundException("No Tweet found with id:" + id);
+         }
+         //checking if that tweet has been deleted
+         if (tweet.isDeleted()) {
+             throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+         }
+
+         return tweet;
+	}
 
     @Override
     public TweetResponseDto getTweetByID(Long id) {
-        Optional<Tweet> optionalTweet = tweetRepository.findById(id);
-        Tweet tweet;
-
-        //checking if tweet exist in database
-        if (optionalTweet.isPresent()) {
-            tweet = optionalTweet.get();
-        } else {
-            throw new NotFoundException("No Tweet found with id:" + id);
-        }
-        //checking if that tweet has been deleted
-        if (tweet.isDeleted()) {
-            throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
-        }
-
+        Tweet tweet = findTweet(id);
         return tweetMapper.entityToDto(tweet);
     }
 
@@ -70,7 +92,8 @@ public class TweetServiceImpl implements TweetService {
 	}
 
 	@Override
-	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto, User user) {
+	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto) {
+		User user = findUser(tweetRequestDto.getCredentials().getUsername());
 		Tweet tweet = tweetMapper.DtoToEntity(tweetRequestDto);
 		String content = tweetRequestDto.getContent();
 		tweet.setAuthor(user);
@@ -78,44 +101,31 @@ public class TweetServiceImpl implements TweetService {
 		tweet.setInReplyTo(null);
 		tweet.setLikedByUsers(null);
 		tweet.setDeleted(false);
-		int index = 0;
+		
 		List<User> mentions = null;
 		List<Hashtag> hashtags = null;
-		
-		while (content.contains("@") || content.contains("#")) {
-			if (content.contains("@")) {
-				if (mentions == null) {
-					mentions = new ArrayList<>();
-				}
-				index = content.indexOf('@', 0);
-				int end = content.indexOf(' ', index);
-				content.replaceFirst("@", " ");
-				String mention = content.substring(index + 1, end - 1);
-				Optional<User> optionalUser = userRepository.findByCredentialsUsername(mention);
-
-		        User mentionedUser;
-		        if (optionalUser.isPresent()) {
-		            mentionedUser = optionalUser.get();
-		        } else {
-		            throw new NotFoundException(("No user found with username: " + mention));
-		        }
-		        
-		        mentions.add(mentionedUser);
+		tweetRepository.saveAndFlush(tweet);
+		if (content.contains("#")) {
+			if (hashtags == null) {
+				hashtags = new ArrayList<>();
+			}
+			String[] tagSplit = content.split("#");
+			for (int i = 1; i < tagSplit.length; i++) {
 				
-			} else if (content.contains("#")) {
-				if (hashtags == null) {
-					hashtags = new ArrayList<>();
-				}
 				Hashtag hashtag = null;
-				index = content.indexOf('#', 0);
-				int end = content.indexOf(' ', index);
-				content.replaceFirst("#", " ");
-				
-				String label = content.substring(index + 1, end - 1);
+				String label = "";
+				if (tagSplit[i].contains(" ")) {
+					label = "#" + tagSplit[i].split(" ")[0];
+				} else {
+					label = "#" + tagSplit[i];
+				}
+
 				if (!hashtagRepository.existsByLabel(label)) {
 					hashtag = new Hashtag();
 					hashtag.setLabel(label);
-					hashtag.setTweets(Arrays.asList(tweet));
+					List<Tweet> tweetArray = new ArrayList<>();
+					tweetArray.add(tweet);
+					hashtag.setTweets(tweetArray);
 					
 				} else {
 					hashtag = hashtagRepository.findByLabel(label);
@@ -125,8 +135,27 @@ public class TweetServiceImpl implements TweetService {
 				}
 				hashtags.add(hashtag);
 				hashtagRepository.saveAndFlush(hashtag);
+				
 			}
+		}
+		
+		if (content.contains("@")) {
+			if (mentions == null) {
+				mentions = new ArrayList<>();
+			}
+			String[] mentionSplit = content.split("@");
 			
+			for (int i = 1; i < mentionSplit.length; i++) {
+				
+				String mention = "";
+				if (mentionSplit[i].contains(" ")) {
+					mention = mentionSplit[i].split(" ")[0];
+				} else {
+					mention = mentionSplit[i];
+				}
+				User mentionedUser = findUser(mention);
+		        mentions.add(mentionedUser);
+			}
 		}
 		tweet.setHashtags(hashtags);
 		tweet.setMentionedUsers(mentions);
@@ -199,6 +228,21 @@ public class TweetServiceImpl implements TweetService {
 		return userResponseDtos;
 
 //		return userMapper.entitiesToDtos(mentionedUsers);
+	}
+
+	@Override
+	public void likeTweet(long id, CredentialsDto credRequestDto) {
+		User likedUser = findUser(credRequestDto.getUsername());
+		Tweet tweet = findTweet(id);
+        Set<User> temp = tweet.getLikedByUsers();
+        temp.add(likedUser);
+        tweet.setLikedByUsers(temp);
+        tweetRepository.saveAndFlush(tweet);
+
+        List<Tweet> tempTweets = likedUser.getLikedTweets();
+        tempTweets.add(tweet);
+        likedUser.setLikedTweets(tempTweets);
+        userRepository.saveAndFlush(likedUser);
 	}
 
 	@Override

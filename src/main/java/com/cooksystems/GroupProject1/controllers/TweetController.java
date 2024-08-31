@@ -1,9 +1,7 @@
 package com.cooksystems.GroupProject1.controllers;
 
 import com.cooksystems.GroupProject1.dtos.*;
-import com.cooksystems.GroupProject1.entities.User;
 import com.cooksystems.GroupProject1.services.TweetService;
-import com.cooksystems.GroupProject1.services.UserService;
 
 import java.util.List;
 
@@ -17,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 public class TweetController {
 
     private final TweetService tweetService;
-    private final UserService userService;
 	
 	@GetMapping
 	public List<TweetResponseDto> getAllTweets(){
@@ -61,10 +58,12 @@ public class TweetController {
 
 	@PostMapping
 	public TweetResponseDto createTweet(@RequestBody TweetRequestDto tweetRequestDto) {
-		return tweetService.createTweet(tweetRequestDto, userService.findUser(tweetRequestDto.getCredentials().getUsername()));
+		return tweetService.createTweet(tweetRequestDto);
 	}
-//	@PostMapping("/{id}/like")
-//	
+	@PostMapping("/{id}/like")
+	public void likeTweet(@PathVariable long id, @RequestBody CredentialsDto credRequestDto) {
+		tweetService.likeTweet(id, credRequestDto);
+	}
 //	@PostMapping("/{id}/reply")
 //	
 //	@PostMapping("/{id}/repost")

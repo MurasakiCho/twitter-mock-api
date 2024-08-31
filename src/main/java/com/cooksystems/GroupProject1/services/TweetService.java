@@ -3,7 +3,6 @@ package com.cooksystems.GroupProject1.services;
 import java.util.List;
 
 import com.cooksystems.GroupProject1.dtos.*;
-import com.cooksystems.GroupProject1.entities.User;
 
 public interface TweetService {
 
@@ -11,7 +10,7 @@ public interface TweetService {
 
 	List<TweetResponseDto> getAllTweets();
 
-	TweetResponseDto createTweet(TweetRequestDto tweetRequestDto, User user);
+	TweetResponseDto createTweet(TweetRequestDto tweetRequestDto);
 
 	TweetResponseDto getRepostById(Long id);
 
@@ -27,4 +26,5 @@ public interface TweetService {
 
 	List<TweetResponseDto> getTweetReplies(Long id);
 
+	void likeTweet(long id, CredentialsDto credRequestDto);
 }
