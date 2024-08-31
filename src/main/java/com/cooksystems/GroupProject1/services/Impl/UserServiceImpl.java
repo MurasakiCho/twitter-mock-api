@@ -36,7 +36,6 @@ public class UserServiceImpl implements UserService {
     private final TweetMapper tweetMapper;
     private final ProfileMapper profileMapper;
 
-    @Override
     public User findUser(String username) {
 		Optional<User> optionalUser = userRepository.findByCredentialsUsername(username);
 

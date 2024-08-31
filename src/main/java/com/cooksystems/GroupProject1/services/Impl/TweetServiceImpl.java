@@ -1,5 +1,6 @@
 package com.cooksystems.GroupProject1.services.Impl;
 
+import com.cooksystems.GroupProject1.dtos.CredentialsDto;
 import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
 import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
 import com.cooksystems.GroupProject1.dtos.UserResponseDto;
@@ -22,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -32,23 +34,44 @@ public class TweetServiceImpl implements TweetService {
 	private final UserRepository userRepository;
     private final TweetMapper tweetMapper;
 	private final UserMapper userMapper;
+	
+	
+    public User findUser(String username) {
+		Optional<User> optionalUser = userRepository.findByCredentialsUsername(username);
+
+        User user;
+        if (optionalUser.isPresent()) {
+            user = optionalUser.get();
+        } else {
+            throw new NotFoundException(("No user found with username: " + username));
+        }
+        if (user.isDeleted()) {
+            throw new NotFoundException("User with username: " + username + " has been deleted");
+        }
+        return user;
+	}
+    
+    public Tweet findTweet(Long id) {
+    	 Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+         Tweet tweet;
+
+         //checking if tweet exist in database
+         if (optionalTweet.isPresent()) {
+             tweet = optionalTweet.get();
+         } else {
+             throw new NotFoundException("No Tweet found with id:" + id);
+         }
+         //checking if that tweet has been deleted
+         if (tweet.isDeleted()) {
+             throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+         }
+
+         return tweet;
+	}
 
     @Override
     public TweetResponseDto getTweetByID(Long id) {
-        Optional<Tweet> optionalTweet = tweetRepository.findById(id);
-        Tweet tweet;
-
-        //checking if tweet exist in database
-        if (optionalTweet.isPresent()) {
-            tweet = optionalTweet.get();
-        } else {
-            throw new NotFoundException("No Tweet found with id:" + id);
-        }
-        //checking if that tweet has been deleted
-        if (tweet.isDeleted()) {
-            throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
-        }
-
+        Tweet tweet = findTweet(id);
         return tweetMapper.entityToDto(tweet);
     }
 
@@ -69,7 +92,8 @@ public class TweetServiceImpl implements TweetService {
 	}
 
 	@Override
-	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto, User user) {
+	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto) {
+		User user = findUser(tweetRequestDto.getCredentials().getUsername());
 		Tweet tweet = tweetMapper.DtoToEntity(tweetRequestDto);
 		String content = tweetRequestDto.getContent();
 		tweet.setAuthor(user);
@@ -129,15 +153,7 @@ public class TweetServiceImpl implements TweetService {
 				} else {
 					mention = mentionSplit[i];
 				}
-				Optional<User> optionalUser = userRepository.findByCredentialsUsername(mention);
-
-		        User mentionedUser;
-		        if (optionalUser.isPresent()) {
-		            mentionedUser = optionalUser.get();
-		        } else {
-		            throw new NotFoundException(("No user found with username: " + mention));
-		        }
-		        
+				User mentionedUser = findUser(mention);
 		        mentions.add(mentionedUser);
 			}
 		}
@@ -212,6 +228,21 @@ public class TweetServiceImpl implements TweetService {
 		return userResponseDtos;
 
 //		return userMapper.entitiesToDtos(mentionedUsers);
+	}
+
+	@Override
+	public void likeTweet(long id, CredentialsDto credRequestDto) {
+		User likedUser = findUser(credRequestDto.getUsername());
+		Tweet tweet = findTweet(id);
+        Set<User> temp = tweet.getLikedByUsers();
+        temp.add(likedUser);
+        tweet.setLikedByUsers(temp);
+        tweetRepository.saveAndFlush(tweet);
+        
+        List<Tweet> tempTweets = likedUser.getLikedTweets();
+        tempTweets.add(tweet);
+        likedUser.setLikedTweets(tempTweets);
+        userRepository.saveAndFlush(likedUser);
 	}
 
 }
