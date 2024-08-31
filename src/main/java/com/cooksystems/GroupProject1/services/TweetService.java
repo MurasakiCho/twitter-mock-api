@@ -20,4 +20,6 @@ public interface TweetService {
 	List<UserResponseDto> getMentionedUsersByTweetId(Long id);
 
 	void likeTweet(long id, CredentialsDto credRequestDto);
+
+	TweetResponseDto createRepost(long id, CredentialsDto credRequestDto);
 }

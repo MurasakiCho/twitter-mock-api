@@ -254,4 +254,30 @@ public class TweetServiceImpl implements TweetService {
         userRepository.saveAndFlush(likedUser);
 	}
 
+	@Override
+	public TweetResponseDto createRepost(long id, CredentialsDto credRequestDto) {
+		if (credRequestDto == null) {
+			throw new NotFoundException("Request body must not be empty.");
+		} else if (credRequestDto.getPassword() == null) {
+			throw new NotFoundException("Requested credentials did not contain a password");
+		}
+		Tweet tweet = findTweet(id);
+		
+		Tweet repost = new Tweet();
+		repost.setAuthor(tweet.getAuthor());
+		repost.setContent(null);
+		repost.setInReplyTo(null);
+		repost.setLikedByUsers(null);
+		repost.setDeleted(false);
+		repost.setRepostOf(tweet);
+		tweetRepository.saveAndFlush(repost);
+		
+		List<Tweet> temp = tweet.getReposts();
+		temp.add(repost);
+		tweet.setReposts(temp);
+		tweetRepository.saveAndFlush(tweet);
+		
+		return tweetMapper.entityToDto(tweetRepository.saveAndFlush(repost));
+	}
+
 }
