@@ -256,4 +256,73 @@ public class TweetServiceImpl implements TweetService {
 		return hashtagMapper.entitiesToDtos(tweet.getHashtags());
 	}
 
+	@Override
+	public List<UserResponseDto> getTweetLikes(Long id){
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+
+		if (optionalTweet.isEmpty()) {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+
+		Tweet tweet = optionalTweet.get();
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+
+        List<User> users = new ArrayList<>(tweet.getLikedByUsers());
+
+		return userMapper.entitiesToDtos(users);
+	}
+
+	@Override
+	public ContextDto getTweetContext(Long id){
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+		if (optionalTweet.isEmpty()) {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+		Tweet tweet = optionalTweet.get();
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+
+		List<Tweet> before = new ArrayList<>(getAllInReplyToTweets(tweet));
+        List<Tweet> after = new ArrayList<>(tweet.getReplies());
+
+		before.sort(Tweet::compareTo);
+		after.sort(Tweet::compareTo);
+
+		List<TweetResponseDto> beforeDTO = tweetMapper.entitiesToDto(before);
+		List<TweetResponseDto> afterDTO = tweetMapper.entitiesToDto(after);
+
+		ContextDto contextDto = new ContextDto();
+		contextDto.setTweet(tweetMapper.entityToDto(tweet));
+		contextDto.setBefore(beforeDTO);
+		contextDto.setAfter(afterDTO);
+		return contextDto;
+	}
+
+	public List<Tweet> getAllInReplyToTweets(Tweet tweet){
+		List<Tweet> allInReplyToTweets = new ArrayList<>();
+		if(tweet.getInReplyTo() != null) {
+			return allInReplyToTweets;
+		}
+
+		allInReplyToTweets.addAll(getAllInReplyToTweets(tweet.getInReplyTo()));
+		return allInReplyToTweets;
+	}
+
+	@Override
+	public List<TweetResponseDto> getTweetReplies(Long id){
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+		if (optionalTweet.isEmpty()) {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+		Tweet tweet = optionalTweet.get();
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+
+		List<Tweet> replies = tweet.getReplies();
+		return tweetMapper.entitiesToDto(replies);
+	}
 }

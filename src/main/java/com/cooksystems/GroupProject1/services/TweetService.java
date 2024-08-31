@@ -20,4 +20,11 @@ public interface TweetService {
 	TweetResponseDto deleteTweet(Long id, CredentialsDto credentialsDto);
 
 	List<HashtagDto> getTweetHashtags (Long id);
+
+	List<UserResponseDto> getTweetLikes(Long id);
+
+	ContextDto getTweetContext(Long id);
+
+	List<TweetResponseDto> getTweetReplies(Long id);
+
 }

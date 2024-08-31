@@ -34,11 +34,20 @@ public class TweetController {
 		return tweetService.getTweetHashtags(id);
 	}
 
-//	@GetMapping("/{id}/likes")
-//
-//	@GetMapping("/{id}/context")
-//	
-//	@GetMapping("/{id}/reply")
+	@GetMapping("/{id}/likes")
+	public List<UserResponseDto> getTweetLikes(@PathVariable long id) {
+		return tweetService.getTweetLikes(id);
+	}
+
+	@GetMapping("/{id}/context")
+	public ContextDto getTweetContext(@PathVariable long id) {
+		return tweetService.getTweetContext(id);
+	}
+
+	@GetMapping("/{id}/reply")
+	public List<TweetResponseDto> getTweetReply(@PathVariable long id) {
+		return tweetService.getTweetReplies(id);
+	}
 
 	@GetMapping("/{id}/reposts")
 	public TweetResponseDto getRepostById(@PathVariable Long id) {
