@@ -242,6 +242,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public List<TweetResponseDto> getUserMentions(String username) {
+		findUser(username);
 		List<Tweet> tweets = tweetRepository.findAll();
 		List<TweetResponseDto> mentionedTweetDtos = new ArrayList<>();
 		Collections.sort(tweets);

@@ -93,6 +93,15 @@ public class TweetServiceImpl implements TweetService {
 
 	@Override
 	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto) {
+		if (tweetRequestDto == null) {
+			throw new NotFoundException("Request body must not be empty.");
+		} else if (tweetRequestDto.getContent() == null) {
+			throw new NotFoundException("Request included no content");
+		} else if (tweetRequestDto.getCredentials() == null) {
+			throw new NotFoundException("Request included no credentials");
+		} else if (tweetRequestDto.getCredentials().getPassword() == null) {
+			throw new NotFoundException("Requested credentials did not contain a password");
+		}
 		User user = findUser(tweetRequestDto.getCredentials().getUsername());
 		Tweet tweet = tweetMapper.DtoToEntity(tweetRequestDto);
 		String content = tweetRequestDto.getContent();
@@ -246,6 +255,7 @@ public class TweetServiceImpl implements TweetService {
 	}
 
 	@Override
+
 	public TweetResponseDto deleteTweet(Long id, CredentialsDto credentialsDto) {
 		if(credentialsDto == null){
 			throw new BadRequestException("No credentials provided");
@@ -369,4 +379,30 @@ public class TweetServiceImpl implements TweetService {
 		List<Tweet> replies = tweet.getReplies();
 		return tweetMapper.entitiesToDto(replies);
 	}
+
+	public TweetResponseDto createRepost(long id, CredentialsDto credRequestDto) {
+		if (credRequestDto == null) {
+			throw new NotFoundException("Request body must not be empty.");
+		} else if (credRequestDto.getPassword() == null) {
+			throw new NotFoundException("Requested credentials did not contain a password");
+		}
+		Tweet tweet = findTweet(id);
+		
+		Tweet repost = new Tweet();
+		repost.setAuthor(tweet.getAuthor());
+		repost.setContent(null);
+		repost.setInReplyTo(null);
+		repost.setLikedByUsers(null);
+		repost.setDeleted(false);
+		repost.setRepostOf(tweet);
+		tweetRepository.saveAndFlush(repost);
+		
+		List<Tweet> temp = tweet.getReposts();
+		temp.add(repost);
+		tweet.setReposts(temp);
+		tweetRepository.saveAndFlush(tweet);
+		
+		return tweetMapper.entityToDto(tweetRepository.saveAndFlush(repost));
+	}
+
 }
