@@ -17,12 +17,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -306,8 +301,26 @@ public class TweetServiceImpl implements TweetService {
 		if (tweet.isDeleted()) {
 			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
 		}
+		List<Hashtag> hashtags = tweet.getHashtags();
 
-		return hashtagMapper.entitiesToDtos(tweet.getHashtags());
+		// Use a Set to remove duplicates
+		Set<String> uniqueLabels = new HashSet<>();
+		List<Hashtag> uniqueHashtags = new ArrayList<>();
+
+		for (Hashtag hashtag : hashtags) {
+			String label = hashtag.getLabel();
+			if (label.startsWith("#")) {
+				label = label.substring(1);  // Remove '#' if present
+				hashtag.setLabel(label);
+			}
+
+			// Check if the label is unique before adding to the list
+			if (uniqueLabels.add(label)) {
+				uniqueHashtags.add(hashtag);
+			}
+		}
+
+		return hashtagMapper.entitiesToDtos(uniqueHashtags);
 	}
 
 	@Override
