@@ -85,7 +85,7 @@ public class UserServiceImpl implements UserService {
         String username = userRequestDto.getCredentials().getUsername();
         String password = userRequestDto.getCredentials().getPassword();
         String email = userRequestDto.getProfile().getEmail();
-
+        
         if (username == null || username.trim().isEmpty()) {
             throw new BadRequestException("Username is missing or empty");
         }
