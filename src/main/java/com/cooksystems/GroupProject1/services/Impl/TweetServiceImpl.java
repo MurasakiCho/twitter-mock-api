@@ -245,4 +245,20 @@ public class TweetServiceImpl implements TweetService {
         userRepository.saveAndFlush(likedUser);
 	}
 
+	@Override
+	public TweetResponseDto createReplyTweet(Long id, TweetRequestDto tweetRequestDto) {
+		Tweet tweet = findTweet(id); //tweet that's being replied to
+		User userChecking = findUser(tweetRequestDto.getCredentials().getUsername()); //user error check
+		Tweet reply = tweetMapper.responseDtoToEntity(createTweet(tweetRequestDto));  //the reply tweet
+
+		Tweet save = findTweet(reply.getId());
+		save.setInReplyTo(tweet);
+
+		//add the new reply to the list of replies
+		List<Tweet> replies = tweet.getReplies();
+		replies.add(save);
+
+		return tweetMapper.entityToDto(tweetRepository.saveAndFlush(save));
+	}
+
 }
