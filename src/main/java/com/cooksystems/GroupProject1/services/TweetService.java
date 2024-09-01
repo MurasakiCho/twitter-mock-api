@@ -12,7 +12,7 @@ public interface TweetService {
 
 	TweetResponseDto createTweet(TweetRequestDto tweetRequestDto);
 
-	TweetResponseDto getRepostById(Long id);
+	List<TweetResponseDto> getRepostById(Long id);
 
 	List<UserResponseDto> getMentionedUsersByTweetId(Long id);
 

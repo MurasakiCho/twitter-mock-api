@@ -47,7 +47,7 @@ public class TweetController {
 	}
 
 	@GetMapping("/{id}/reposts")
-	public TweetResponseDto getRepostById(@PathVariable Long id) {
+	public List<TweetResponseDto> getRepostById(@PathVariable Long id) {
 		return tweetService.getRepostById(id);
 	}
 
