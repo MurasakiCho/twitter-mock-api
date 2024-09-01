@@ -263,6 +263,7 @@ public class TweetServiceImpl implements TweetService {
 		replies.add(save);
 
 		return tweetMapper.entityToDto(tweetRepository.saveAndFlush(save));
+	}
 
 	public TweetResponseDto deleteTweet(Long id, CredentialsDto credentialsDto) {
 		if(credentialsDto == null){
