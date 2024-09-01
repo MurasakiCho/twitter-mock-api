@@ -71,7 +71,4 @@ public class UserController {
     public UserResponseDto deleteUser(@PathVariable String username, @RequestBody CredentialsDto credentialsDto){
         return userService.deleteUser(username, credentialsDto);
     }
-	
-	
-	
 }

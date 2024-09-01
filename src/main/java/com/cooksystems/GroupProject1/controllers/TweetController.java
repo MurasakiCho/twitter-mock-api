@@ -76,6 +76,5 @@ public class TweetController {
 	public TweetResponseDto createRepost(@PathVariable long id, @RequestBody CredentialsDto credRequestDto) {
 		return tweetService.createRepost(id, credRequestDto);
 	}
-	
-//	@DeleteMapping("/{id}")
+
 }
