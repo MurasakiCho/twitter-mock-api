@@ -370,7 +370,7 @@ public class TweetServiceImpl implements TweetService {
 
 	public List<Tweet> getAllInReplyToTweets(Tweet tweet){
 		List<Tweet> allInReplyToTweets = new ArrayList<>();
-		if(tweet.getInReplyTo() != null) {
+		if(tweet.getInReplyTo() == null) {
 			return allInReplyToTweets;
 		}
 
