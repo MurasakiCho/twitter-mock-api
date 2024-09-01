@@ -1,13 +1,12 @@
 package com.cooksystems.GroupProject1.services.Impl;
 
-import com.cooksystems.GroupProject1.dtos.CredentialsDto;
-import com.cooksystems.GroupProject1.dtos.TweetRequestDto;
-import com.cooksystems.GroupProject1.dtos.TweetResponseDto;
-import com.cooksystems.GroupProject1.dtos.UserResponseDto;
+import com.cooksystems.GroupProject1.dtos.*;
 import com.cooksystems.GroupProject1.entities.Hashtag;
 import com.cooksystems.GroupProject1.entities.Tweet;
 import com.cooksystems.GroupProject1.entities.User;
+import com.cooksystems.GroupProject1.exceptions.BadRequestException;
 import com.cooksystems.GroupProject1.exceptions.NotFoundException;
+import com.cooksystems.GroupProject1.mappers.HashtagMapper;
 import com.cooksystems.GroupProject1.mappers.TweetMapper;
 import com.cooksystems.GroupProject1.mappers.UserMapper;
 import com.cooksystems.GroupProject1.repositories.HashtagRepository;
@@ -18,12 +17,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +28,7 @@ public class TweetServiceImpl implements TweetService {
 	private final UserRepository userRepository;
     private final TweetMapper tweetMapper;
 	private final UserMapper userMapper;
+	private final HashtagMapper hashtagMapper;
 	
 	
     public User findUser(String username) {
@@ -93,6 +88,15 @@ public class TweetServiceImpl implements TweetService {
 
 	@Override
 	public TweetResponseDto createTweet(TweetRequestDto tweetRequestDto) {
+		if (tweetRequestDto == null) {
+			throw new NotFoundException("Request body must not be empty.");
+		} else if (tweetRequestDto.getContent() == null) {
+			throw new NotFoundException("Request included no content");
+		} else if (tweetRequestDto.getCredentials() == null) {
+			throw new NotFoundException("Request included no credentials");
+		} else if (tweetRequestDto.getCredentials().getPassword() == null) {
+			throw new NotFoundException("Requested credentials did not contain a password");
+		}
 		User user = findUser(tweetRequestDto.getCredentials().getUsername());
 		Tweet tweet = tweetMapper.DtoToEntity(tweetRequestDto);
 		String content = tweetRequestDto.getContent();
@@ -119,7 +123,7 @@ public class TweetServiceImpl implements TweetService {
 				} else {
 					label = "#" + tagSplit[i];
 				}
-				
+
 				if (!hashtagRepository.existsByLabel(label)) {
 					hashtag = new Hashtag();
 					hashtag.setLabel(label);
@@ -238,7 +242,7 @@ public class TweetServiceImpl implements TweetService {
         temp.add(likedUser);
         tweet.setLikedByUsers(temp);
         tweetRepository.saveAndFlush(tweet);
-        
+
         List<Tweet> tempTweets = likedUser.getLikedTweets();
         tempTweets.add(tweet);
         likedUser.setLikedTweets(tempTweets);
@@ -259,6 +263,172 @@ public class TweetServiceImpl implements TweetService {
 		replies.add(save);
 
 		return tweetMapper.entityToDto(tweetRepository.saveAndFlush(save));
+
+	public TweetResponseDto deleteTweet(Long id, CredentialsDto credentialsDto) {
+		if(credentialsDto == null){
+			throw new BadRequestException("No credentials provided");
+		}
+		if(credentialsDto.getUsername() == null || credentialsDto.getUsername().isEmpty()){
+			throw new BadRequestException("No username provided");
+		}
+		if(credentialsDto.getPassword() == null || credentialsDto.getPassword().isEmpty()){
+			throw new BadRequestException("No password provided");
+		}
+
+		Optional<User> optionalUser = userRepository.findByCredentialsUsername(credentialsDto.getUsername());
+
+		if (optionalUser.isEmpty()) {
+			throw new NotFoundException("No user found with username:" + credentialsDto.getUsername());
+		}
+
+		User user = optionalUser.get();
+
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+
+		if (optionalTweet.isEmpty()) {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+
+		Tweet tweet = optionalTweet.get();
+
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+
+		if(tweet.getAuthor() != user){
+			throw new NotFoundException("Tweet does not belong to user");
+		}
+
+		tweet.setDeleted(true);
+		tweetRepository.saveAndFlush(tweet);
+		return tweetMapper.entityToDto(tweet);
+	}
+
+	@Override
+	public List<HashtagDto> getTweetHashtags(Long id) {
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+		if (optionalTweet.isEmpty()) {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+		Tweet tweet = optionalTweet.get();
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+		List<Hashtag> hashtags = tweet.getHashtags();
+
+		// Use a Set to remove duplicates
+		Set<String> uniqueLabels = new HashSet<>();
+		List<Hashtag> uniqueHashtags = new ArrayList<>();
+
+		for (Hashtag hashtag : hashtags) {
+			String label = hashtag.getLabel();
+			if (label.startsWith("#")) {
+				label = label.substring(1);  // Remove '#' if present
+				hashtag.setLabel(label);
+			}
+
+			// Check if the label is unique before adding to the list
+			if (uniqueLabels.add(label)) {
+				uniqueHashtags.add(hashtag);
+			}
+		}
+
+		return hashtagMapper.entitiesToDtos(uniqueHashtags);
+	}
+
+	@Override
+	public List<UserResponseDto> getTweetLikes(Long id){
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+
+		if (optionalTweet.isEmpty()) {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+
+		Tweet tweet = optionalTweet.get();
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+
+        List<User> users = new ArrayList<>(tweet.getLikedByUsers());
+
+		return userMapper.entitiesToDtos(users);
+	}
+
+	@Override
+	public ContextDto getTweetContext(Long id){
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+		if (optionalTweet.isEmpty()) {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+		Tweet tweet = optionalTweet.get();
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+
+		List<Tweet> before = new ArrayList<>(getAllInReplyToTweets(tweet));
+        List<Tweet> after = new ArrayList<>(tweet.getReplies());
+
+		before.sort(Tweet::compareTo);
+		after.sort(Tweet::compareTo);
+
+		List<TweetResponseDto> beforeDTO = tweetMapper.entitiesToDto(before);
+		List<TweetResponseDto> afterDTO = tweetMapper.entitiesToDto(after);
+
+		ContextDto contextDto = new ContextDto();
+		contextDto.setTweet(tweetMapper.entityToDto(tweet));
+		contextDto.setBefore(beforeDTO);
+		contextDto.setAfter(afterDTO);
+		return contextDto;
+	}
+
+	public List<Tweet> getAllInReplyToTweets(Tweet tweet){
+		List<Tweet> allInReplyToTweets = new ArrayList<>();
+		if(tweet.getInReplyTo() != null) {
+			return allInReplyToTweets;
+		}
+
+		allInReplyToTweets.addAll(getAllInReplyToTweets(tweet.getInReplyTo()));
+		return allInReplyToTweets;
+	}
+
+	@Override
+	public List<TweetResponseDto> getTweetReplies(Long id){
+		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
+		if (optionalTweet.isEmpty()) {
+			throw new NotFoundException("No Tweet found with id:" + id);
+		}
+		Tweet tweet = optionalTweet.get();
+		if (tweet.isDeleted()) {
+			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
+		}
+
+		List<Tweet> replies = tweet.getReplies();
+		return tweetMapper.entitiesToDto(replies);
+	}
+
+	public TweetResponseDto createRepost(long id, CredentialsDto credRequestDto) {
+		if (credRequestDto == null) {
+			throw new NotFoundException("Request body must not be empty.");
+		} else if (credRequestDto.getPassword() == null) {
+			throw new NotFoundException("Requested credentials did not contain a password");
+		}
+		Tweet tweet = findTweet(id);
+		
+		Tweet repost = new Tweet();
+		repost.setAuthor(tweet.getAuthor());
+		repost.setContent(null);
+		repost.setInReplyTo(null);
+		repost.setLikedByUsers(null);
+		repost.setDeleted(false);
+		repost.setRepostOf(tweet);
+		tweetRepository.saveAndFlush(repost);
+		
+		List<Tweet> temp = tweet.getReposts();
+		temp.add(repost);
+		tweet.setReposts(temp);
+		tweetRepository.saveAndFlush(tweet);
+		
+		return tweetMapper.entityToDto(tweetRepository.saveAndFlush(repost));
 	}
 
 }
