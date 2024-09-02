@@ -276,8 +276,7 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Username has been deleted");
         }
 
-        List<Tweet> tweets = new ArrayList<>();
-        tweets.addAll(user.getTweets());
+        List<Tweet> tweets = new ArrayList<>(user.getTweets());
 
         for(User following : user.getFollowing()){
             tweets.addAll(following.getTweets());
