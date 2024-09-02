@@ -367,7 +367,7 @@ public class TweetServiceImpl implements TweetService {
 		List<TweetResponseDto> afterDTO = tweetMapper.entitiesToDto(after);
 
 		ContextDto contextDto = new ContextDto();
-		contextDto.setTweet(tweetMapper.entityToDto(tweet));
+		contextDto.setTarget(tweetMapper.entityToDto(tweet));
 		contextDto.setBefore(beforeDTO);
 		contextDto.setAfter(afterDTO);
 		return contextDto;
