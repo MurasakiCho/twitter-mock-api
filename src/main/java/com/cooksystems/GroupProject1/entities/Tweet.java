@@ -74,7 +74,6 @@ public class Tweet implements Comparable<Tweet>{
 	public int compareTo(Tweet o) {
 		return getPosted().compareTo(o.getPosted());
 	}
-    
-    
+
 
 }

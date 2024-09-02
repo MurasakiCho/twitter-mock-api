@@ -357,7 +357,7 @@ public class TweetServiceImpl implements TweetService {
 			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
 		}
 
-		List<Tweet> before = new ArrayList<>(getAllInReplyToTweets(tweet));
+		List<Tweet> before = new ArrayList<>(getInReplyToTweets(tweet));
         List<Tweet> after = new ArrayList<>(tweet.getReplies());
 
 		before.sort(Tweet::compareTo);
@@ -373,14 +373,15 @@ public class TweetServiceImpl implements TweetService {
 		return contextDto;
 	}
 
-	public List<Tweet> getAllInReplyToTweets(Tweet tweet){
-		List<Tweet> allInReplyToTweets = new ArrayList<>();
+	public List<Tweet> getInReplyToTweets(Tweet tweet){
+		List<Tweet> InReplyToTweets = new ArrayList<>();
 		if(tweet.getInReplyTo() == null) {
-			return allInReplyToTweets;
+			return InReplyToTweets;
 		}
 
-		allInReplyToTweets.addAll(getAllInReplyToTweets(tweet.getInReplyTo()));
-		return allInReplyToTweets;
+		InReplyToTweets.add(tweet.getInReplyTo());
+		InReplyToTweets.addAll(getInReplyToTweets(tweet.getInReplyTo()));
+		return InReplyToTweets;
 	}
 
 	@Override
@@ -395,11 +396,7 @@ public class TweetServiceImpl implements TweetService {
 		}
 
 		List<Tweet> replies = tweet.getReplies();
-		for (Tweet reply : replies) {
-			if (reply.isDeleted()) {
-				replies.remove(reply);
-			}
-		}
+        replies.removeIf(Tweet::isDeleted);
 		return tweetMapper.entitiesToDto(replies);
 	}
 
