@@ -167,32 +167,23 @@ public class TweetServiceImpl implements TweetService {
 	}
 
 	@Override
-	public TweetResponseDto getRepostById(Long id) {
-		//repost tweet = a tweet that reposted another tweet
-		//reposted tweet = the original tweet that was reposted
+	public List<TweetResponseDto> getRepostById(Long id) {
 		Optional<Tweet> optionalTweet = tweetRepository.findById(id);
-		Tweet tweet;
-
-		//checking if tweet exist in database
-		if (optionalTweet.isPresent()) {
-			tweet = optionalTweet.get();
-		} else {
+		if (optionalTweet.isEmpty()) {
 			throw new NotFoundException("No Tweet found with id:" + id);
 		}
-		//checking if the repost tweet has been deleted
+		Tweet tweet = optionalTweet.get();
 		if (tweet.isDeleted()) {
 			throw new NotFoundException("The Tweet with id:" + id + " has been deleted");
 		}
-		//checking if the tweet is a repost tweet
-		if (tweet.getRepostOf() == null) {
-			throw new NotFoundException("The Tweet with id:" + id + " has no reposted Tweet");
-		}
-		//checking if the reposted tweet has been deleted
-		if (tweet.getRepostOf().isDeleted()) {
-			throw new NotFoundException("The Tweet that was reposted has been deleted");
-		}
 
-		return tweetMapper.entityToDto(tweet);
+		List<Tweet> reposts = tweet.getReposts();
+		for (Tweet repost : reposts) {
+			if (repost.isDeleted()) {
+				reposts.remove(repost);
+			}
+		}
+		return tweetMapper.entitiesToDto(reposts);
 	}
 
 	@Override
@@ -250,6 +241,20 @@ public class TweetServiceImpl implements TweetService {
 	}
 
 	@Override
+	public TweetResponseDto createReplyTweet(Long id, TweetRequestDto tweetRequestDto) {
+		Tweet tweet = findTweet(id); //tweet that's being replied to
+		User userChecking = findUser(tweetRequestDto.getCredentials().getUsername()); //user error check
+		Tweet reply = tweetMapper.responseDtoToEntity(createTweet(tweetRequestDto));  //the reply tweet
+
+		Tweet save = findTweet(reply.getId());
+		save.setInReplyTo(tweet);
+
+		//add the new reply to the list of replies
+		List<Tweet> replies = tweet.getReplies();
+		replies.add(save);
+
+		return tweetMapper.entityToDto(tweetRepository.saveAndFlush(save));
+	}
 
 	public TweetResponseDto deleteTweet(Long id, CredentialsDto credentialsDto) {
 		if(credentialsDto == null){
@@ -362,7 +367,7 @@ public class TweetServiceImpl implements TweetService {
 		List<TweetResponseDto> afterDTO = tweetMapper.entitiesToDto(after);
 
 		ContextDto contextDto = new ContextDto();
-		contextDto.setTweet(tweetMapper.entityToDto(tweet));
+		contextDto.setTarget(tweetMapper.entityToDto(tweet));
 		contextDto.setBefore(beforeDTO);
 		contextDto.setAfter(afterDTO);
 		return contextDto;
@@ -390,6 +395,11 @@ public class TweetServiceImpl implements TweetService {
 		}
 
 		List<Tweet> replies = tweet.getReplies();
+		for (Tweet reply : replies) {
+			if (reply.isDeleted()) {
+				replies.remove(reply);
+			}
+		}
 		return tweetMapper.entitiesToDto(replies);
 	}
 
@@ -402,7 +412,7 @@ public class TweetServiceImpl implements TweetService {
 		Tweet tweet = findTweet(id);
 		
 		Tweet repost = new Tweet();
-		repost.setAuthor(tweet.getAuthor());
+		repost.setAuthor(findUser(credRequestDto.getUsername()));
 		repost.setContent(null);
 		repost.setInReplyTo(null);
 		repost.setLikedByUsers(null);

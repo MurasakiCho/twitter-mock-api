@@ -12,7 +12,7 @@ public interface TweetService {
 
 	TweetResponseDto createTweet(TweetRequestDto tweetRequestDto);
 
-	TweetResponseDto getRepostById(Long id);
+	List<TweetResponseDto> getRepostById(Long id);
 
 	List<UserResponseDto> getMentionedUsersByTweetId(Long id);
 
@@ -28,5 +28,8 @@ public interface TweetService {
 
 	void likeTweet(long id, CredentialsDto credRequestDto);
 
+	TweetResponseDto createReplyTweet(Long id, TweetRequestDto tweetRequestDto);
+
 	TweetResponseDto createRepost(long id, CredentialsDto credRequestDto);
+  
 }
